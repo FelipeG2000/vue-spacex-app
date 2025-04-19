@@ -3,6 +3,7 @@
     <h1>🚀 SpaceX Launches Dashboard</h1>
 
     <div v-if="loading">Cargando datos...</div>
+    <div v-else-if="errorMessage">{{ errorMessage }}</div>
     <div v-else>
       <LaunchTable :launches="launches" />
       <StatusChart :launches="launches" />
@@ -17,15 +18,20 @@ import StatusChart from './components/StatusChart.vue'
 
 const launches = ref([])
 const loading = ref(true)
+const errorMessage = ref('')
 
 onMounted(async () => {
   try {
-    const res = await fetch("https://19azuh2l80.execute-api.us-east-1.amazonaws.com/launches")
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/launches`)
+    
+    if (!res.ok) {
+      throw new Error('No se pudieron cargar los datos. Intenta más tarde.')
+    }
     const data = await res.json()
-    console.log("✅ Datos recibidos:", data)
     launches.value = data
-  } catch (e) {
-    console.error("❌ Error al cargar datos:", e)
+  } catch (error) {
+    console.error(error)
+    errorMessage.value = error.message
   } finally {
     loading.value = false
   }

@@ -24,7 +24,20 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ vars.REGION }}
-
+    
+    - name: Get API URL from CloudFormation Output
+      id: get-api-url
+      run: |
+          URL=$(aws cloudformation describe-stacks \
+            --stack-name ${{ vars.STACK_NAME }} \
+            --query "Stacks[0].Outputs[?OutputKey=='SpaceXLaunchesApiEndpoint'].OutputValue" \
+            --output text)
+          echo "API_URL=$URL" >> $GITHUB_ENV
+    
+    - name: Create .env.production with API URL
+      run: |
+          echo "VITE_API_URL=${{ env.API_URL }}" > .env.production
+    
     - name: Log in to Amazon ECR
       run: |
         aws ecr get-login-password --region ${{ vars.REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.REGION }}.amazonaws.com
