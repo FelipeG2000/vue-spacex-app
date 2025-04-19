@@ -4,7 +4,7 @@ This Vue-based frontend is fully integrated with an automated CI/CD pipeline usi
 
 
 ### 🌐 Live Demo
-👉 [http://3.238.16.68/](http://3.238.16.68/)
+👉 [http://44.204.83.107/](http://44.204.83.107/)
 
 
 ### 🧰 Tech Stack
