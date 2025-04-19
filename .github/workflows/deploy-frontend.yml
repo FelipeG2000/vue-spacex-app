@@ -3,6 +3,9 @@ name: Deploy Frontend to ECS
 on:
   push:
     branches: [ main ]
+    
+    paths-ignore:
+      - 'README.md'
 
 permissions:
   contents: read
