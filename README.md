@@ -27,7 +27,17 @@ npm run dev
 > ⚠️ If you fork this repository and wish to deploy to your own AWS environment:
 > 
 > 1. First, **fork and deploy the [backend repository](https://github.com/FelipeG2000/spacexback)**. This will generate your own API endpoint.
-> 2. Then, **set up the following secrets and variables in your forked frontend repo**:
+> 
+> 2. Create a `.env` file in the root of the project with the following content:
+>
+> ```bash
+> VITE_API_URL=https://<your-backend-api-url>
+> # Replace `<your-backend-api-url>` with the actual URL from your deployed backend (e.g., `https://abcdefg.execute-api.us-east-1.amazonaws.com`).
+> ```
+> 
+> This is required so the frontend app can correctly fetch the launch data from the backend during local development.
+>
+> 3. Then, **set up the following secrets and variables in your forked frontend repo**:
 >    - GitHub Secrets:
 >      - `AWS_ACCESS_KEY_ID`
 >      - `AWS_SECRET_ACCESS_KEY`
@@ -38,7 +48,8 @@ npm run dev
 >      - `ECS_CLUSTER`
 >      - `ECS_SERVICE`
 > 
-> This is required so GitHub Actions can fetch the correct API URL and deploy successfully to your infrastructure.
+> These are required so GitHub Actions can fetch the correct API URL and deploy successfully to your infrastructure.
+
 
 
 
