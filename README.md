@@ -100,6 +100,28 @@ Data visualization showing:
 
 * Historical trends
 
+## 📦 Docker & ECS Deployment Details
+This app is containerized with Docker and deployed to AWS using ECS Fargate. Here’s a breakdown of the process:
+
+### 🔨 Docker Image Build
+The image is built from the included dockerfile, which uses a multi-stage build:
+
+ - Stage 1 compiles the Vue app with Node.js
+
+ - Stage 2 serves the built static files with Nginx
+
+### 🐳 Push to Amazon ECR
+The GitHub Actions workflow logs into Amazon ECR using your secrets and pushes the image:
+```bash
+docker build -t $ECR_REPO .
+docker tag $ECR_REPO:latest <aws_account_id>.dkr.ecr.$REGION.amazonaws.com/$ECR_REPO:latest
+docker push <aws_account_id>.dkr.ecr.$REGION.amazonaws.com/$ECR_REPO:latest
+```
+
+### 🚀 Deploy on ECS Fargate
+The pushed image is deployed to ECS Fargate using aws ecs update-service, which triggers a new task using the updated image. The service runs behind a public IP, making the frontend accessible via its public DNS or IP.
+
+> ECS task configuration (CPU, memory, container port, public IP) must be configured in the ECS console or using IaC.
 
 ## ⚙️ CI/CD Pipeline (GitHub Actions)
 Each push to the main branch automatically triggers the deployment pipeline, which performs the following steps:
@@ -123,6 +145,8 @@ Each push to the main branch automatically triggers the deployment pipeline, whi
 ### 📄 File: .github/workflows/deploy-frontend.yml
 
 This pipeline ensures the frontend is automatically updated in production with every change pushed to the main branch, enabling seamless continuous integration with AWS.
+
+> Note: This CI/CD pipeline assumes that the ECS Cluster, Task Definition, and Service have been pre-configured (either manually via the AWS Console or through Infrastructure as Code). The aws ecs update-service command will trigger a new deployment using the latest Docker image from Amazon ECR.
 
 ## 🧼 Future Improvements
 - Add unit tests for core components
