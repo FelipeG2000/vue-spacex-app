@@ -4,7 +4,7 @@ This Vue-based frontend is fully integrated with an automated CI/CD pipeline usi
 
 
 ### 🌐 Live Demo
-👉 [http://44.204.83.107/](http://44.204.83.107/)
+👉 [spacex-frontend-lb-1010699048.us-east-1.elb.amazonaws.com](http://spacex-frontend-lb-1010699048.us-east-1.elb.amazonaws.com)
 
 
 ### 🧰 Tech Stack
@@ -14,44 +14,7 @@ This Vue-based frontend is fully integrated with an automated CI/CD pipeline usi
 - Amazon ECS Fargate
 - Amazon ECR
 - Nginx
-
-
-## **Requires Node.js >= 18 and Vite**
-### 📦 Local Development
-```bash
-git clone https://github.com/your-username/vue-spacex-app.git
-cd vue-spacex-app
-npm install
-npm run dev
-```
-> ⚠️ If you fork this repository and wish to deploy to your own AWS environment:
-> 
-> 1. First, **fork and deploy the [backend repository](https://github.com/FelipeG2000/spacexback)**. This will generate your own API endpoint.
-> 
-> 2. Create a `.env` file in the root of the project with the following content:
->
-> ```bash
-> VITE_API_URL=https://<your-backend-api-url>
-> # Replace `<your-backend-api-url>` with the actual URL from your deployed backend (e.g., `https://abcdefg.execute-api.us-east-1.amazonaws.com`).
-> ```
-> 
-> This is required so the frontend app can correctly fetch the launch data from the backend during local development.
->
-> 3. Then, **set up the following secrets and variables in your forked frontend repo**:
->    - GitHub Secrets:
->      - `AWS_ACCESS_KEY_ID`
->      - `AWS_SECRET_ACCESS_KEY`
->    - GitHub Repository Variables:
->      - `REGION`
->      - `ECR_REPO`
->      - `STACK_NAME`
->      - `ECS_CLUSTER`
->      - `ECS_SERVICE`
-> 
-> These are required so GitHub Actions can fetch the correct API URL and deploy successfully to your infrastructure.
-
-
-
+- Terraform 
 
 ### 📁 Project Structure
 
@@ -100,28 +63,83 @@ Data visualization showing:
 
 * Historical trends
 
-## 📦 Docker & ECS Deployment Details
-This app is containerized with Docker and deployed to AWS using ECS Fargate. Here’s a breakdown of the process:
+## **Requires Node.js >= 18 and Vite**
 
-### 🔨 Docker Image Build
-The image is built from the included dockerfile, which uses a multi-stage build:
-
- - Stage 1 compiles the Vue app with Node.js
-
- - Stage 2 serves the built static files with Nginx
-
-### 🐳 Push to Amazon ECR
-The GitHub Actions workflow logs into Amazon ECR using your secrets and pushes the image:
+### 📦 Local Development
+To run this project locally:
 ```bash
-docker build -t $ECR_REPO .
-docker tag $ECR_REPO:latest <aws_account_id>.dkr.ecr.$REGION.amazonaws.com/$ECR_REPO:latest
-docker push <aws_account_id>.dkr.ecr.$REGION.amazonaws.com/$ECR_REPO:latest
+git clone https://github.com/FelipeG2000/vue-spacex-app.git
+cd vue-spacex-app
+npm install
+npm run dev
+```
+> ⚠️ **Important**:
+> For the application to work locally, you need to provide a valid backend API URL from the deployed backend (e.g. from AWS API Gateway).
+> 1. First, **fork and deploy the [backend repository](https://github.com/FelipeG2000/spacexback)**. This will generate your own API endpoint.
+> 
+> 2. Create a `.env` file in the root of the project with the following content:
+>
+> ```bash
+> VITE_API_URL=https://<your-backend-api-url>
+> # Replace `<your-backend-api-url>` with the actual URL from your deployed backend (e.g., `https://abcdefg.execute-api.us-east-1.amazonaws.com`).
+> ```
+> 
+> This is required so the frontend app can correctly fetch the launch data from the backend during local development.
+
+### 🧱 Infrastructure Provisioning (via Terraform)
+
+You can deploy the entire frontend infrastructure (ECR, ECS Cluster, Task, Load Balancer, etc.) using Terraform.
+
+From the infra/ folder:
+```bash
+cd infra
+terraform init 
+terraform apply
 ```
 
-### 🚀 Deploy on ECS Fargate
-The pushed image is deployed to ECS Fargate using aws ecs update-service, which triggers a new task using the updated image. The service runs behind a public IP, making the frontend accessible via its public DNS or IP.
 
-> ECS task configuration (CPU, memory, container port, public IP) must be configured in the ECS console or using IaC.
+This command will output key information like:
+ - Public Load Balancer DNS (access your app from here)
+ - ECR Repository URL (used to push Docker image)
+
+### 🛠 Deploy Script (Optional)
+For manual deployments, a bash script (deploy.sh) is available to:
+
+1. Fetch the backend API endpoint from CloudFormation.
+
+2. Create .env.production with the correct VITE_API_URL.
+
+3. Authenticate with ECR using AWS CLI.
+
+4. Build and tag the Docker image.
+
+5. Push to ECR.
+
+6. Trigger aws ecs update-service to redeploy.
+
+>⚠️ This script assumes that the infrastructure (ECR, ECS, etc.) is already provisioned via Terraform. It will not create any AWS resources — it only automates deployment steps.
+
+### 🔐 Configure GitHub Actions (CI/CD)
+
+After applying Terraform, configure GitHub Secrets and Variables in your frontend GitHub repository:
+
+### 🔐 GitHub Secrets
+
+| Secret Name            | Description                            |
+|------------------------|----------------------------------------|
+| `AWS_ACCESS_KEY_ID`    | AWS access key for authentication.     |
+| `AWS_SECRET_ACCESS_KEY`| AWS secret key for authentication.     |
+| `AWS_ACCOUNT_ID`       | Your 12-digit AWS Account ID.          |
+
+### ⚙️ GitHub Repository Variables
+
+| Variable Name   | Description                                                  |
+|------------------|--------------------------------------------------------------|
+| `REGION`         | `us-east-1`                               |
+| `ECR_REPO`       | `spacex-frontend`              |
+| `ECS_CLUSTER`    | `spacex-frontend-cluster`                 |
+| `ECS_SERVICE`    | `spacex-frontend-service`                 |
+| `STACK_NAME`     | `spacex-backend`   |
 
 ## ⚙️ CI/CD Pipeline (GitHub Actions)
 Each push to the main branch automatically triggers the deployment pipeline, which performs the following steps:
